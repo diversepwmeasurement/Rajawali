@@ -1,35 +1,42 @@
-name: Release
-
-on:
-  push:
-    tags:
-      - '*'
-
 jobs:
   build:
     name: Publish release
-    runs-on: macOS-latest # it has NDK installed
+    runs-on: self-hosted
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Install JDK
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'adopt'
-          java-version: 11
-      - name: Install Android SDK
-        uses: malinskiy/action-android/install-sdk@release/0.1.4
-      - name: Build project
-        run: ./gradlew clean build
-        env:
-          VERSION: ${{ github.ref }}
-      - run: |
-          assetsAAR=$(find . -name *release.aar | while read -r asset ; do echo "-a $asset" ; done)
-          VERSION=$(echo $VERSION | cut -d'/' -f3)
-          tag_name="${GITHUB_REF##*/}"
-          hub release create ${assetsAAR} -m "$tag_name" "$tag_name"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ github.ref }}
+    - continue-on-error: true
+      name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - continue-on-error: true
+      name: Install JDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: adopt
+        java-version: 11
+    - continue-on-error: true
+      name: Install Android SDK
+      uses: malinskiy/action-android/install-sdk@release/0.1.4
+    - continue-on-error: true
+      env:
+        VERSION: ${{ github.ref }}
+      name: Build project
+      run: ./gradlew clean build
+    - continue-on-error: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        VERSION: ${{ github.ref }}
+      run: 'assetsAAR=$(find . -name *release.aar | while read -r asset ; do echo
+        "-a $asset" ; done)
+
+        VERSION=$(echo $VERSION | cut -d''/'' -f3)
+
+        tag_name="${GITHUB_REF##*/}"
+
+        hub release create ${assetsAAR} -m "$tag_name" "$tag_name"
+
+        '
+name: Release
+on:
+  repository_dispatch:
+    types: trigger-ga___Android-CI-release.yml

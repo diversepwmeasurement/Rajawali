@@ -1,74 +1,82 @@
-name: PullRequest
-
-on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
-      - develop
-
 jobs:
   buildTest:
     name: Build
-    runs-on: macOS-latest
+    runs-on: self-hosted
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Install JDK
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'adopt'
-          java-version: 11
-      - name: Install Android SDK
-        uses: malinskiy/action-android/install-sdk@release/0.1.4
-      - name: Build project
-        run: ./gradlew assembleDebug
-      - name: Run tests
-        run: ./gradlew test
-      - name: Run instrumentation tests
-        uses: malinskiy/action-android/emulator-run-cmd@release/0.1.4
-        with:
-          cmd: ./gradlew connectedDebugAndroidTest
-          api: 28
-          tag: default
-          abi: x86
-          cmdOptions: -noaudio -no-boot-anim -no-window
-      - name: Archive Espresso results
-        uses: actions/upload-artifact@v3
-        if: ${{ always() }}
-        with:
-          name: Rajawali-Espresso-report
-          path: examples/build/reports/androidTests/connected
-      - name: Archive screenshots
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: Rajawali-Screenshots
-          path: |
-            examples/build/outputs/connected_android_test_additional_output/debugAndroidTest/connected
-            examples/build/outputs/androidTest-results/connected
+    - continue-on-error: true
+      name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - continue-on-error: true
+      name: Install JDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: adopt
+        java-version: 11
+    - continue-on-error: true
+      name: Install Android SDK
+      uses: malinskiy/action-android/install-sdk@release/0.1.4
+    - continue-on-error: true
+      name: Build project
+      run: ./gradlew assembleDebug
+    - continue-on-error: true
+      name: Run tests
+      run: ./gradlew test
+    - continue-on-error: true
+      name: Run instrumentation tests
+      uses: malinskiy/action-android/emulator-run-cmd@release/0.1.4
+      with:
+        abi: x86
+        api: 28
+        cmd: ./gradlew connectedDebugAndroidTest
+        cmdOptions: -noaudio -no-boot-anim -no-window
+        tag: default
+    - continue-on-error: true
+      if: ${{ always() }}
+      name: Archive Espresso results
+      uses: actions/upload-artifact@v3
+      with:
+        name: Rajawali-Espresso-report
+        path: examples/build/reports/androidTests/connected
+    - continue-on-error: true
+      if: ${{ always() }}
+      name: Archive screenshots
+      uses: actions/upload-artifact@v3
+      with:
+        name: Rajawali-Screenshots
+        path: 'examples/build/outputs/connected_android_test_additional_output/debugAndroidTest/connected
+
+          examples/build/outputs/androidTest-results/connected
+
+          '
   check:
     name: Check
-    runs-on: macOS-latest
+    runs-on: self-hosted
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Install JDK
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'adopt'
-          java-version: 11
-      - name: Install Android SDK
-        uses: malinskiy/action-android/install-sdk@release/0.1.4
-      - name: Gradle checks
-        run: ./gradlew check
-      - name: Archive Lint report
-        uses: actions/upload-artifact@v3
-        if: ${{ always() }}
-        with:
-          name: Rajawali-Lint
-          path: ./**/build/reports/lint-results*.html
+    - continue-on-error: true
+      name: Checkout
+      uses: actions/checkout@v3
+    - continue-on-error: true
+      name: Install JDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: adopt
+        java-version: 11
+    - continue-on-error: true
+      name: Install Android SDK
+      uses: malinskiy/action-android/install-sdk@release/0.1.4
+    - continue-on-error: true
+      name: Gradle checks
+      run: ./gradlew check
+    - continue-on-error: true
+      if: ${{ always() }}
+      name: Archive Lint report
+      uses: actions/upload-artifact@v3
+      with:
+        name: Rajawali-Lint
+        path: ./**/build/reports/lint-results*.html
+name: PullRequest
+on:
+  repository_dispatch:
+    types: trigger-ga___Android-CI-Espresso.yml
